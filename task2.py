@@ -7,7 +7,6 @@ import typing
 import collections
 from torch import nn
 from dataloaders import load_cifar10
-import pickle
 
 
 def compute_loss_and_accuracy(
