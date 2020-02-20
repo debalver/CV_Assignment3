@@ -25,6 +25,9 @@ def compute_loss_and_accuracy(
     """
     average_loss = 0
     accuracy = 0
+    counter = 0
+    correct_predictions = 0
+    total_size = 0
 
     with torch.no_grad():
         for (X_batch, Y_batch) in dataloader:
@@ -34,8 +37,16 @@ def compute_loss_and_accuracy(
             # Forward pass the images through our model
             output_probs = model(X_batch)
 
-            # Compute Loss and Accuracy
+            # Compute Loss
+            average_loss += loss_criterion(output_probs, Y_batch)
 
+            # Compute accuracy
+            prediction = output_probs.argmax(dim=1)
+            correct_predictions += (prediction == Y_batch).sum().item() 
+            total_size += X_batch.shape[0]             
+            counter+=1 
+    accuracy = correct_predictions/total_size
+    average_loss /= counter
     return average_loss, accuracy
 
 
@@ -57,21 +68,47 @@ class ExampleModel(nn.Module):
         self.feature_extractor = nn.Sequential(
             nn.Conv2d(
                 in_channels=image_channels,
-                out_channels=num_filters,
+                out_channels=32,
                 kernel_size=5,
                 stride=1,
                 padding=2
-            )
+                ), 
+            nn.ReLU(), 
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(in_channels=32,
+                    out_channels=64,
+                    kernel_size=5,
+                    stride=1,
+                    padding=2
+                ),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2), 
+            nn.Conv2d(in_channels=64, 
+                    out_channels=128, 
+                    kernel_size=5, 
+                    stride=1, 
+                    padding=2
+                ),
+            nn.ReLU(), 
+            nn.MaxPool2d(kernel_size=2, stride=2)
         )
-        # The output of feature_extractor will be [batch_size, num_filters, 16, 16]
+       
+        # The output of feature_extractor will be [batch_size, num_filters, 4, 4]
         self.num_output_features = 32*32*32
+        # Initialize our last fully connected layer
         # Initialize our last fully connected layer
         # Inputs all extracted features from the convolutional layers
         # Outputs num_classes predictions, 1 for each class.
         # There is no need for softmax activation function, as this is
         # included with nn.CrossEntropyLoss
+        #self.classifier = nn.Sequential(
+        #    nn.Linear(self.num_output_features, num_classes),
+        #)
+        # Define the fully connected layers (FCL)
         self.classifier = nn.Sequential(
-            nn.Linear(self.num_output_features, num_classes),
+            nn.Linear(4*4*128, 64),
+            nn.ReLU(),
+            nn.Linear(64, 10)
         )
 
     def forward(self, x):
@@ -81,6 +118,9 @@ class ExampleModel(nn.Module):
             x: Input image, shape: [batch_size, 3, 32, 32]
         """
         batch_size = x.shape[0]
+        x = self.feature_extractor(x)
+        x = x.view(-1, 4*4*128)
+        x = self.classifier(x)
         out = x
         expected_shape = (batch_size, self.num_classes)
         assert out.shape == (batch_size, self.num_classes),\
@@ -119,7 +159,7 @@ class Trainer:
 
         # Load our dataset
         self.dataloader_train, self.dataloader_val, self.dataloader_test = dataloaders
-
+        
         # Validate our model everytime we pass through 50% of the dataset
         self.num_steps_per_val = len(self.dataloader_train) // 2
         self.global_step = 0
