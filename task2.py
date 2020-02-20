@@ -62,29 +62,32 @@ class ExampleModel(nn.Module):
                 num_classes: Number of classes we want to predict (10)
         """
         super().__init__()
-        num_filters = 32  # Set number of filters in first conv layer
-        self.num_classes = num_classes
+        self.num_filters_cl1 = 32  # Set number of filters in first conv layer
+        self.num_filters_cl2 = 64 # "" second conv layer 
+        self.num_filters_cl3 = 128 # "" third conv layer 
+        self.num_filters_fcl1 = 64 # number of filter in the first fully connected layer 
+        self.num_classes = num_classes # second and last fully connected layer
         # Define the convolutional layers
         self.feature_extractor = nn.Sequential(
             nn.Conv2d(
                 in_channels=image_channels,
-                out_channels=32,
+                out_channels=self.num_filters_cl1,
                 kernel_size=5,
                 stride=1,
                 padding=2
                 ), 
             nn.ReLU(), 
             nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.Conv2d(in_channels=32,
-                    out_channels=64,
+            nn.Conv2d(in_channels= self.num_filters_cl1,
+                    out_channels=self.num_filters_cl2,
                     kernel_size=5,
                     stride=1,
                     padding=2
                 ),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2), 
-            nn.Conv2d(in_channels=64, 
-                    out_channels=128, 
+            nn.Conv2d(in_channels=self.num_filters_cl2, 
+                    out_channels=self.num_filters_cl3, 
                     kernel_size=5, 
                     stride=1, 
                     padding=2
@@ -106,9 +109,9 @@ class ExampleModel(nn.Module):
         #)
         # Define the fully connected layers (FCL)
         self.classifier = nn.Sequential(
-            nn.Linear(4*4*128, 64),
+            nn.Linear(4*4*self.num_filters_cl3, self.num_filters_fcl1),
             nn.ReLU(),
-            nn.Linear(64, 10)
+            nn.Linear(self.num_filters_fcl1, self.num_classes)
         )
 
     def forward(self, x):
@@ -119,7 +122,7 @@ class ExampleModel(nn.Module):
         """
         batch_size = x.shape[0]
         x = self.feature_extractor(x)
-        x = x.view(-1, 4*4*128)
+        x = x.view(-1, 4*4*self.num_filters_cl3)
         x = self.classifier(x)
         out = x
         expected_shape = (batch_size, self.num_classes)
@@ -285,19 +288,32 @@ def create_plots(trainer: Trainer, name: str):
     plot_path.mkdir(exist_ok=True)
     # Save plots and show them
     plt.figure(figsize=(20, 8))
-    plt.subplot(1, 2, 1)
+    plt.subplot(2, 1, 1)
     plt.title("Cross Entropy Loss")
     utils.plot_loss(trainer.TRAIN_LOSS, label="Training loss")
     utils.plot_loss(trainer.VALIDATION_LOSS, label="Validation loss")
     utils.plot_loss(trainer.TEST_LOSS, label="Testing Loss")
     plt.legend()
-    plt.subplot(1, 2, 2)
+    plt.subplot(2, 1, 2)
     plt.title("Accuracy")
     utils.plot_loss(trainer.VALIDATION_ACC, label="Validation Accuracy")
     utils.plot_loss(trainer.TEST_ACC, label="Testing Accuracy")
     plt.legend()
     plt.savefig(plot_path.joinpath(f"{name}_plot.png"))
     plt.show()
+    # Display the final results 
+    train_average_loss, train_accuracy = compute_loss_and_accuracy(trainer.dataloader_train, trainer.model, trainer.loss_criterion)
+    val_average_loss, val_accuracy = compute_loss_and_accuracy(trainer.dataloader_val, trainer.model, trainer.loss_criterion)
+    test_average_loss, test_accuracy = compute_loss_and_accuracy(trainer.dataloader_test, trainer.model, trainer.loss_criterion)
+    print("The final average train loss : {}".format(train_average_loss))
+    print("The final train accuracy : {}".format(train_accuracy))
+    print("The final average validations loss : {}".format(val_average_loss))
+    print("The final validation accuracy : {}".format(val_accuracy))
+    print("The final average test loss : {}".format(test_average_loss))
+    print("The final test accuracy : {}".format(test_accuracy))
+
+
+
 
 
 if __name__ == "__main__":
