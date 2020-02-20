@@ -6,6 +6,7 @@ import time
 import typing
 import collections
 from torch import nn
+from tqdm import tqdm
 from dataloaders import load_cifar10
 
 
@@ -97,7 +98,7 @@ class ExampleModel(nn.Module):
         )
        
         # The output of feature_extractor will be [batch_size, num_filters, 4, 4]
-        self.num_output_features = 32*32*32
+        self.num_output_features = 4*4*self.num_filters_cl3
         # Initialize our last fully connected layer
         # Initialize our last fully connected layer
         # Inputs all extracted features from the convolutional layers
@@ -109,7 +110,7 @@ class ExampleModel(nn.Module):
         #)
         # Define the fully connected layers (FCL)
         self.classifier = nn.Sequential(
-            nn.Linear(4*4*self.num_filters_cl3, self.num_filters_fcl1),
+            nn.Linear(self.num_output_features, self.num_filters_fcl1),
             nn.ReLU(),
             nn.Linear(self.num_filters_fcl1, self.num_classes)
         )
@@ -122,7 +123,90 @@ class ExampleModel(nn.Module):
         """
         batch_size = x.shape[0]
         x = self.feature_extractor(x)
-        x = x.view(-1, 4*4*self.num_filters_cl3)
+        x = x.view(-1, self.num_output_features)
+        x = self.classifier(x)
+        out = x
+        expected_shape = (batch_size, self.num_classes)
+        assert out.shape == (batch_size, self.num_classes),\
+            f"Expected output of forward pass to be: {expected_shape}, but got: {out.shape}"
+        return out
+
+
+# Start experimenting for task 3, try to find the best parameters 
+class Task3Model(nn.Module):
+
+    def __init__(self,
+                 image_channels,
+                 num_classes):
+        """
+            Is called when model is initialized.
+            Args:
+                image_channels. Number of color channels in image (3)
+                num_classes: Number of classes we want to predict (10)
+        """
+        super().__init__()
+        self.num_filters_cl1 = 32  # Set number of filters in first conv layer
+        self.num_filters_cl2 = 64 # "" second conv layer 
+        self.num_filters_cl3 = 128 # "" third conv layer 
+        self.num_filters_fcl1 = 64 # number of filter in the first fully connected layer 
+        self.num_classes = num_classes # second and last fully connected layer
+        # Define the convolutional layers
+        self.feature_extractor = nn.Sequential(
+            nn.Conv2d(
+                in_channels=image_channels,
+                out_channels=self.num_filters_cl1,
+                kernel_size=2,
+                stride=1,
+                padding=2
+                ), 
+            nn.ReLU(), 
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(in_channels= self.num_filters_cl1,
+                    out_channels=self.num_filters_cl2,
+                    kernel_size=2,
+                    stride=1,
+                    padding=2
+                ),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2), 
+            nn.Conv2d(in_channels=self.num_filters_cl2, 
+                    out_channels=self.num_filters_cl3, 
+                    kernel_size=2, 
+                    stride=1, 
+                    padding=2
+                ),
+            nn.ReLU(), 
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+       
+        # The output of feature_extractor will be [batch_size, num_filters, 4, 4]
+        # Find out size output after cvn (square): size_new = (size_old - F_old+2P_old)/S_old + 1
+        self.num_output_features = 36*self.num_filters_cl3
+        # Initialize our last fully connected layer
+        # Initialize our last fully connected layer
+        # Inputs all extracted features from the convolutional layers
+        # Outputs num_classes predictions, 1 for each class.
+        # There is no need for softmax activation function, as this is
+        # included with nn.CrossEntropyLoss
+        #self.classifier = nn.Sequential(
+        #    nn.Linear(self.num_output_features, num_classes),
+        #)
+        # Define the fully connected layers (FCL)
+        self.classifier = nn.Sequential(
+            nn.Linear(self.num_output_features, self.num_filters_fcl1),
+            nn.ReLU(),
+            nn.Linear(self.num_filters_fcl1, self.num_classes)
+        )
+
+    def forward(self, x):
+        """
+        Performs a forward pass through the model
+        Args:
+            x: Input image, shape: [batch_size, 3, 32, 32]
+        """
+        batch_size = x.shape[0]
+        x = self.feature_extractor(x)
+        x = x.view(-1, self.num_output_features)
         x = self.classifier(x)
         out = x
         expected_shape = (batch_size, self.num_classes)
@@ -259,7 +343,9 @@ class Trainer:
                     self.save_model()
                     if self.should_early_stop():
                         print("Early stopping.")
+                        self.print_outputs()
                         return
+        self.print_outputs()
 
     def save_model(self):
         def is_best_model():
@@ -281,6 +367,18 @@ class Trainer:
                 f"Could not load best checkpoint. Did not find under: {self.checkpoint_dir}")
             return
         self.model.load_state_dict(state_dict)
+    
+    def print_outputs(self): 
+        # Display the final results 
+        train_average_loss, train_accuracy = compute_loss_and_accuracy(self.dataloader_train, self.model, self.loss_criterion)
+        val_average_loss, val_accuracy = compute_loss_and_accuracy(self.dataloader_val, self.model, self.loss_criterion)
+        test_average_loss, test_accuracy = compute_loss_and_accuracy(self.dataloader_test, self.model, self.loss_criterion)
+        print("The final average train loss : {}".format(train_average_loss))
+        print("The final train accuracy : {}".format(train_accuracy))
+        print("The final average validations loss : {}".format(val_average_loss))
+        print("The final validation accuracy : {}".format(val_accuracy))
+        print("The final average test loss : {}".format(test_average_loss))
+        print("The final test accuracy : {}".format(test_accuracy))
 
 
 def create_plots(trainer: Trainer, name: str):
@@ -301,16 +399,7 @@ def create_plots(trainer: Trainer, name: str):
     plt.legend()
     plt.savefig(plot_path.joinpath(f"{name}_plot.png"))
     plt.show()
-    # Display the final results 
-    train_average_loss, train_accuracy = compute_loss_and_accuracy(trainer.dataloader_train, trainer.model, trainer.loss_criterion)
-    val_average_loss, val_accuracy = compute_loss_and_accuracy(trainer.dataloader_val, trainer.model, trainer.loss_criterion)
-    test_average_loss, test_accuracy = compute_loss_and_accuracy(trainer.dataloader_test, trainer.model, trainer.loss_criterion)
-    print("The final average train loss : {}".format(train_average_loss))
-    print("The final train accuracy : {}".format(train_accuracy))
-    print("The final average validations loss : {}".format(val_average_loss))
-    print("The final validation accuracy : {}".format(val_accuracy))
-    print("The final average test loss : {}".format(test_average_loss))
-    print("The final test accuracy : {}".format(test_accuracy))
+    
 
 
 
