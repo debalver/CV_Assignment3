@@ -4,6 +4,7 @@ import torch
 import utils
 import time
 import typing
+import torchvision
 import collections
 from torch import nn
 from tqdm import tqdm
@@ -133,6 +134,186 @@ class ExampleModel(nn.Module):
 
 
 # Start experimenting for task 3, try to find the best parameters 
+class Model7764(nn.Module):
+
+    def __init__(self,
+                 image_channels,
+                 num_classes):
+        """
+            Is called when model is initialized.
+            Args:
+                image_channels. Number of color channels in image (3)
+                num_classes: Number of classes we want to predict (10)
+        """
+        super().__init__()
+        self.num_filters_cl1 = 32  # Set number of filters in first conv layer
+        self.num_filters_cl2 = 64 # "" second conv layer 
+        self.num_filters_cl3 = 128 # "" third conv layer
+        self.num_filters_cl4 = 256  
+        self.num_filters_fcl1 = 64 # number of filter in the first fully connected layer 
+        self.num_classes = num_classes # second and last fully connected layer
+        # Define the convolutional layers
+        self.feature_extractor = nn.Sequential(
+            nn.Conv2d(
+                in_channels=image_channels,
+                out_channels=self.num_filters_cl1,
+                kernel_size=5,
+                stride=1,
+                padding=2
+                ), 
+            nn.ReLU(), 
+            nn.Conv2d(in_channels= self.num_filters_cl1,
+                    out_channels=self.num_filters_cl2,
+                    kernel_size=5,
+                    stride=1,
+                    padding=2
+                ),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2), 
+            nn.Conv2d(in_channels=self.num_filters_cl2, 
+                    out_channels=self.num_filters_cl3, 
+                    kernel_size=5, 
+                    stride=1, 
+                    padding=2
+                ),
+            nn.ReLU(), 
+            nn.Conv2d(in_channels=self.num_filters_cl3, 
+                    out_channels=self.num_filters_cl4, 
+                    kernel_size=5, 
+                    stride=1, 
+                    padding=2
+                ),
+            nn.ReLU(), 
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(in_channels=self.num_filters_cl4, 
+                    out_channels=self.num_filters_cl4, 
+                    kernel_size=5, 
+                    stride=1, 
+                    padding=2
+                ),
+            nn.ReLU(), 
+            nn.Conv2d(in_channels=self.num_filters_cl4, 
+                    out_channels=self.num_filters_cl4, 
+                    kernel_size=5, 
+                    stride=1, 
+                    padding=2
+                ),
+            nn.ReLU(), 
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+       
+        # The output of feature_extractor will be [batch_size, num_filters, 4, 4]
+        # Find out size output after cvn (square): size_new = (size_old - F_old+2P_old)/S_old + 1
+        self.num_output_features = 16*self.num_filters_cl4
+        # Initialize our last fully connected layer
+        # Inputs all extracted features from the convolutional layers
+        # Outputs num_classes predictions, 1 for each class.
+        # There is no need for softmax activation function, as this is
+        # included with nn.CrossEntropyLoss
+        # Define the fully connected layers (FCL)
+        self.classifier = nn.Sequential(
+            nn.Linear(self.num_output_features, self.num_filters_fcl1),
+            nn.ReLU(),
+            nn.Linear(self.num_filters_fcl1, self.num_classes)
+        )
+
+    def forward(self, x):
+        """
+        Performs a forward pass through the model
+        Args:
+            x: Input image, shape: [batch_size, 3, 32, 32]
+        """
+        batch_size = x.shape[0]
+        x = self.feature_extractor(x)
+        x = x.view(-1, self.num_output_features)
+        x = self.classifier(x)
+        out = x
+        expected_shape = (batch_size, self.num_classes)
+        assert out.shape == (batch_size, self.num_classes),\
+            f"Expected output of forward pass to be: {expected_shape}, but got: {out.shape}"
+        return out
+
+class Model7604(nn.Module):
+
+    def __init__(self,
+                 image_channels,
+                 num_classes):
+        """
+            Is called when model is initialized.
+            Args:
+                image_channels. Number of color channels in image (3)
+                num_classes: Number of classes we want to predict (10)
+        """
+        super().__init__()
+        self.num_filters_cl1 = 64  # Set number of filters in first conv layer
+        self.num_filters_cl2 = 128 # "" second conv layer 
+        self.num_filters_cl3 = 256 # "" third conv layer 
+        self.num_filters_fcl1 = 95 # number of filter in the first fully connected layer 
+        self.num_classes = num_classes # second and last fully connected layer
+        # Define the convolutional layers
+        self.feature_extractor = nn.Sequential(
+            nn.Conv2d(
+                in_channels=image_channels,
+                out_channels=self.num_filters_cl1,
+                kernel_size=5,
+                stride=1,
+                padding=2
+                ), 
+            nn.ReLU(), 
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(in_channels= self.num_filters_cl1,
+                    out_channels=self.num_filters_cl2,
+                    kernel_size=5,
+                    stride=1,
+                    padding=2
+                ),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2), 
+            nn.Conv2d(in_channels=self.num_filters_cl2, 
+                    out_channels=self.num_filters_cl3, 
+                    kernel_size=5, 
+                    stride=1, 
+                    padding=2
+                ),
+            nn.ReLU(), 
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+       
+        # The output of feature_extractor will be [batch_size, num_filters, 4, 4]
+        # Find out size output after cvn (square): size_new = (size_old - F_old+2P_old)/S_old + 1
+        self.num_output_features = 16*self.num_filters_cl3
+        # Initialize our last fully connected layer
+        # Initialize our last fully connected layer
+        # Inputs all extracted features from the convolutional layers
+        # Outputs num_classes predictions, 1 for each class.
+        # There is no need for softmax activation function, as this is
+        # included with nn.CrossEntropyLoss
+        #self.classifier = nn.Sequential(
+        #    nn.Linear(self.num_output_features, num_classes),
+        #)
+        # Define the fully connected layers (FCL)
+        self.classifier = nn.Sequential(
+            nn.Linear(self.num_output_features, self.num_filters_fcl1),
+            nn.ReLU(),
+            nn.Linear(self.num_filters_fcl1, self.num_classes)
+        )
+
+    def forward(self, x):
+        """
+        Performs a forward pass through the model
+        Args:
+            x: Input image, shape: [batch_size, 3, 32, 32]
+        """
+        batch_size = x.shape[0]
+        x = self.feature_extractor(x)
+        x = x.view(-1, self.num_output_features)
+        x = self.classifier(x)
+        out = x
+        expected_shape = (batch_size, self.num_classes)
+        assert out.shape == (batch_size, self.num_classes),\
+            f"Expected output of forward pass to be: {expected_shape}, but got: {out.shape}"
+        return out
+
 class Task3Model(nn.Module):
 
     def __init__(self,
@@ -147,7 +328,8 @@ class Task3Model(nn.Module):
         super().__init__()
         self.num_filters_cl1 = 32  # Set number of filters in first conv layer
         self.num_filters_cl2 = 64 # "" second conv layer 
-        self.num_filters_cl3 = 128 # "" third conv layer 
+        self.num_filters_cl3 = 128 # "" third conv layer
+        self.num_filters_cl4 = 256  
         self.num_filters_fcl1 = 64 # number of filter in the first fully connected layer 
         self.num_classes = num_classes # second and last fully connected layer
         # Define the convolutional layers
@@ -155,15 +337,14 @@ class Task3Model(nn.Module):
             nn.Conv2d(
                 in_channels=image_channels,
                 out_channels=self.num_filters_cl1,
-                kernel_size=2,
+                kernel_size=5,
                 stride=1,
                 padding=2
                 ), 
             nn.ReLU(), 
-            nn.MaxPool2d(kernel_size=2, stride=2),
             nn.Conv2d(in_channels= self.num_filters_cl1,
                     out_channels=self.num_filters_cl2,
-                    kernel_size=2,
+                    kernel_size=5,
                     stride=1,
                     padding=2
                 ),
@@ -171,7 +352,29 @@ class Task3Model(nn.Module):
             nn.MaxPool2d(kernel_size=2, stride=2), 
             nn.Conv2d(in_channels=self.num_filters_cl2, 
                     out_channels=self.num_filters_cl3, 
-                    kernel_size=2, 
+                    kernel_size=5, 
+                    stride=1, 
+                    padding=2
+                ),
+            nn.ReLU(), 
+            nn.Conv2d(in_channels=self.num_filters_cl3, 
+                    out_channels=self.num_filters_cl4, 
+                    kernel_size=5, 
+                    stride=1, 
+                    padding=2
+                ),
+            nn.ReLU(), 
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(in_channels=self.num_filters_cl4, 
+                    out_channels=self.num_filters_cl4, 
+                    kernel_size=5, 
+                    stride=1, 
+                    padding=2
+                ),
+            nn.ReLU(), 
+            nn.Conv2d(in_channels=self.num_filters_cl4, 
+                    out_channels=self.num_filters_cl4, 
+                    kernel_size=5, 
                     stride=1, 
                     padding=2
                 ),
@@ -181,16 +384,12 @@ class Task3Model(nn.Module):
        
         # The output of feature_extractor will be [batch_size, num_filters, 4, 4]
         # Find out size output after cvn (square): size_new = (size_old - F_old+2P_old)/S_old + 1
-        self.num_output_features = 36*self.num_filters_cl3
-        # Initialize our last fully connected layer
+        self.num_output_features = 16*self.num_filters_cl4
         # Initialize our last fully connected layer
         # Inputs all extracted features from the convolutional layers
         # Outputs num_classes predictions, 1 for each class.
         # There is no need for softmax activation function, as this is
         # included with nn.CrossEntropyLoss
-        #self.classifier = nn.Sequential(
-        #    nn.Linear(self.num_output_features, num_classes),
-        #)
         # Define the fully connected layers (FCL)
         self.classifier = nn.Sequential(
             nn.Linear(self.num_output_features, self.num_filters_fcl1),
@@ -399,6 +598,7 @@ def create_plots(trainer: Trainer, name: str):
     plt.legend()
     plt.savefig(plot_path.joinpath(f"{name}_plot.png"))
     plt.show()
+    return 0
     
 
 
@@ -411,7 +611,7 @@ if __name__ == "__main__":
     learning_rate = 5e-2
     early_stop_count = 4
     dataloaders = load_cifar10(batch_size)
-    model = ExampleModel(image_channels=3, num_classes=10)
+    model = Task3Model(image_channels=3, num_classes=10)
     trainer = Trainer(
         batch_size,
         learning_rate,
@@ -422,3 +622,4 @@ if __name__ == "__main__":
     )
     trainer.train()
     create_plots(trainer, "task2")
+    
