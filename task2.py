@@ -601,9 +601,9 @@ class Trainer:
         print(self.model)
 
         # Define our optimizer. SGD = Stochastich Gradient Descent
-        self.optimizer = torch.optim.SGD(self.model.parameters(), self.learning_rate)
+        #self.optimizer = torch.optim.SGD(self.model.parameters(), self.learning_rate)
         # Attempt a different optimizer, Adadelta should be used when using Model7524 
-        #self.optimizer = torch.optim.Adadelta(self.model.parameters(), lr=0.5, rho=0.6, eps=1e-06, weight_decay=0)
+        self.optimizer = torch.optim.Adadelta(self.model.parameters(), lr=0.5, rho=0.6, eps=1e-06, weight_decay=0)
         #self.optimizer = torch.optim.ASGD(self.model.parameters(), lr=0.01, lambd=0.0001, alpha=0.75, t0=1000000.0, weight_decay=0)
         
         # Load our dataset
@@ -676,6 +676,8 @@ class Trainer:
 
         for epoch in range(self.epochs):
             self.epoch = epoch
+            if epoch == 6:
+                self.optimizer = torch.optim.SGD(self.model.parameters(), self.learning_rate)
             # Perform a full pass through all the training samples
             for X_batch, Y_batch in self.dataloader_train:
                 # X_batch is the CIFAR10 images. Shape: [batch_size, 3, 32, 32]
@@ -779,7 +781,7 @@ if __name__ == "__main__":
     learning_rate = 5e-2
     early_stop_count = 4
     dataloaders = load_cifar10(batch_size)
-    model = Model7704(image_channels=3, num_classes=10)
+    model = Model7764(image_channels=3, num_classes=10)
     trainer1 = Trainer(
         batch_size,
         learning_rate,
@@ -799,5 +801,5 @@ if __name__ == "__main__":
     #)
     #trainer2.train()
 
-    create_plots(trainer1, "task3a")
+    create_plots(trainer1, "task3d")
 
