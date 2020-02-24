@@ -106,9 +106,7 @@ class ExampleModel(nn.Module):
         # Outputs num_classes predictions, 1 for each class.
         # There is no need for softmax activation function, as this is
         # included with nn.CrossEntropyLoss
-        #self.classifier = nn.Sequential(
-        #    nn.Linear(self.num_output_features, num_classes),
-        #)
+        
         # Define the fully connected layers (FCL)
         self.classifier = nn.Sequential(
             nn.Linear(self.num_output_features, self.num_filters_fcl1),
@@ -203,13 +201,13 @@ class Model7764(nn.Module):
         )
        
         # The output of feature_extractor will be [batch_size, num_filters, 4, 4]
-        # Find out size output after cvn (square): size_new = (size_old - F_old+2P_old)/S_old + 1
         self.num_output_features = 16*self.num_filters_cl4
         # Initialize our last fully connected layer
         # Inputs all extracted features from the convolutional layers
         # Outputs num_classes predictions, 1 for each class.
         # There is no need for softmax activation function, as this is
         # included with nn.CrossEntropyLoss
+
         # Define the fully connected layers (FCL)
         self.classifier = nn.Sequential(
             nn.Linear(self.num_output_features, self.num_filters_fcl1),
@@ -280,7 +278,6 @@ class Model7604(nn.Module):
         )
        
         # The output of feature_extractor will be [batch_size, num_filters, 4, 4]
-        # Find out size output after cvn (square): size_new = (size_old - F_old+2P_old)/S_old + 1
         self.num_output_features = 16*self.num_filters_cl3
         # Initialize our last fully connected layer
         # Initialize our last fully connected layer
@@ -288,10 +285,6 @@ class Model7604(nn.Module):
         # Outputs num_classes predictions, 1 for each class.
         # There is no need for softmax activation function, as this is
         # included with nn.CrossEntropyLoss
-        #self.classifier = nn.Sequential(
-        #    nn.Linear(self.num_output_features, num_classes),
-        #)
-        # Define the fully connected layers (FCL)
         self.classifier = nn.Sequential(
             nn.Linear(self.num_output_features, self.num_filters_fcl1),
             nn.ReLU(),
@@ -369,9 +362,7 @@ class Model7524(nn.Module):
         # Outputs num_classes predictions, 1 for each class.
         # There is no need for softmax activation function, as this is
         # included with nn.CrossEntropyLoss
-        #self.classifier = nn.Sequential(
-        #    nn.Linear(self.num_output_features, num_classes),
-        #)
+        
         # Define the fully connected layers (FCL)
         self.classifier = nn.Sequential(
             nn.Linear(self.num_output_features, self.num_filters_fcl1),
@@ -395,7 +386,7 @@ class Model7524(nn.Module):
             f"Expected output of forward pass to be: {expected_shape}, but got: {out.shape}"
         return out
 
-# +
+
 class Model7704(nn.Module):
 
     def __init__(self,
@@ -458,9 +449,7 @@ class Model7704(nn.Module):
         # Outputs num_classes predictions, 1 for each class.
         # There is no need for softmax activation function, as this is
         # included with nn.CrossEntropyLoss
-        #self.classifier = nn.Sequential(
-        #    nn.Linear(self.num_output_features, num_classes),
-        #)
+   
         # Define the fully connected layers (FCL)
         self.classifier = nn.Sequential(
             nn.Linear(self.num_output_features, self.num_filters_fcl1),
@@ -546,9 +535,7 @@ class Task3Model(nn.Module):
         # Outputs num_classes predictions, 1 for each class.
         # There is no need for softmax activation function, as this is
         # included with nn.CrossEntropyLoss
-        #self.classifier = nn.Sequential(
-        #    nn.Linear(self.num_output_features, num_classes),
-        #)
+    
         # Define the fully connected layers (FCL)
         self.classifier = nn.Sequential(
             nn.Linear(self.num_output_features, self.num_filters_fcl1),
@@ -572,8 +559,6 @@ class Task3Model(nn.Module):
             f"Expected output of forward pass to be: {expected_shape}, but got: {out.shape}"
         return out
 
-
-# -
 
 class Trainer:
 
@@ -604,6 +589,8 @@ class Trainer:
         self.task3d = task3d 
 
         # Define our optimizer. SGD = Stochastich Gradient Descent
+        # Usually the SGD is used, but in the case of the task3d, both the SGD and Adadelta algorithm are used.
+        # The program starts with the adadelta algorithm, and then swith at epoch 6 to the SGD. 
         if self.task3d:
             self.optimizer = torch.optim.Adadelta(self.model.parameters(), lr=0.5, rho=0.6, eps=1e-06, weight_decay=0)
         else:
@@ -780,7 +767,7 @@ if __name__ == "__main__":
     learning_rate = 5e-2
     early_stop_count = 4
     dataloaders = load_cifar10(batch_size)
-    model = Model7764(image_channels=3, num_classes=10)
+    model = Model7704(image_channels=3, num_classes=10)
     #model2 = Model7764(image_channels=3, num_classes=10)
     trainer1 = Trainer(
         batch_size,
