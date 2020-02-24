@@ -314,7 +314,7 @@ class Model7604(nn.Module):
             f"Expected output of forward pass to be: {expected_shape}, but got: {out.shape}"
         return out
 
-class Task3Model(nn.Module):
+class Model7524(nn.Module):
 
     def __init__(self,
                  image_channels,
@@ -332,6 +332,7 @@ class Task3Model(nn.Module):
         self.num_filters_fcl1 = 95 # number of filter in the first fully connected layer 
         self.num_classes = num_classes # second and last fully connected layer
         # Define the convolutional layers
+        # Try to use Adadelta as optimizer 
         self.feature_extractor = nn.Sequential(
             nn.Conv2d(
                 in_channels=image_channels,
@@ -394,6 +395,182 @@ class Task3Model(nn.Module):
             f"Expected output of forward pass to be: {expected_shape}, but got: {out.shape}"
         return out
 
+class Model7704(nn.Module):
+
+    def __init__(self,
+                 image_channels,
+                 num_classes):
+        """
+            Is called when model is initialized.
+            Args:
+                image_channels. Number of color channels in image (3)
+                num_classes: Number of classes we want to predict (10)
+        """
+        super().__init__()
+        self.num_filters_cl1 = 64  # Set number of filters in first conv layer
+        self.num_filters_cl2 = 128 # "" second conv layer 
+        self.num_filters_cl3 = 256 # "" third conv layer
+        self.num_filters_cl4 = 256
+        self.num_filters_fcl1 = 95 # number of filter in the first fully connected layer 
+        self.num_classes = num_classes # second and last fully connected layer
+        # Define the convolutional layers
+        self.feature_extractor = nn.Sequential(
+            nn.Conv2d(
+                in_channels=image_channels,
+                out_channels=self.num_filters_cl1,
+                kernel_size=5,
+                stride=1,
+                padding=2
+                ), 
+            nn.ReLU(), 
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(in_channels= self.num_filters_cl1,
+                    out_channels=self.num_filters_cl2,
+                    kernel_size=5,
+                    stride=1,
+                    padding=2
+                ),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2), 
+            nn.Conv2d(in_channels=self.num_filters_cl2, 
+                    out_channels=self.num_filters_cl3, 
+                    kernel_size=5, 
+                    stride=1, 
+                    padding=2
+                ),
+            nn.ReLU(), 
+            nn.Conv2d(in_channels=self.num_filters_cl3, 
+                    out_channels=self.num_filters_cl4, 
+                    kernel_size=5, 
+                    stride=1, 
+                    padding=2
+                ),
+            nn.ReLU(), 
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+       
+        # The output of feature_extractor will be [batch_size, num_filters, 4, 4]
+        self.num_output_features = 4*4*self.num_filters_cl4
+        # Initialize our last fully connected layer
+        # Initialize our last fully connected layer
+        # Inputs all extracted features from the convolutional layers
+        # Outputs num_classes predictions, 1 for each class.
+        # There is no need for softmax activation function, as this is
+        # included with nn.CrossEntropyLoss
+        #self.classifier = nn.Sequential(
+        #    nn.Linear(self.num_output_features, num_classes),
+        #)
+        # Define the fully connected layers (FCL)
+        self.classifier = nn.Sequential(
+            nn.Linear(self.num_output_features, self.num_filters_fcl1),
+            nn.ReLU(),
+            nn.Linear(self.num_filters_fcl1, self.num_classes)
+        )
+
+    def forward(self, x):
+        """
+        Performs a forward pass through the model
+        Args:
+            x: Input image, shape: [batch_size, 3, 32, 32]
+        """
+        batch_size = x.shape[0]
+        x = self.feature_extractor(x)
+        x = x.view(-1, self.num_output_features)
+        x = self.classifier(x)
+        out = x
+        expected_shape = (batch_size, self.num_classes)
+        assert out.shape == (batch_size, self.num_classes),\
+            f"Expected output of forward pass to be: {expected_shape}, but got: {out.shape}"
+        return out
+    
+    class Task3Model(nn.Module):
+
+    def __init__(self,
+                 image_channels,
+                 num_classes):
+        """
+            Is called when model is initialized.
+            Args:
+                image_channels. Number of color channels in image (3)
+                num_classes: Number of classes we want to predict (10)
+        """
+        super().__init__()
+        self.num_filters_cl1 = 64  # Set number of filters in first conv layer
+        self.num_filters_cl2 = 128 # "" second conv layer 
+        self.num_filters_cl3 = 256 # "" third conv layer
+        self.num_filters_cl4 = 256
+        self.num_filters_fcl1 = 95 # number of filter in the first fully connected layer 
+        self.num_classes = num_classes # second and last fully connected layer
+        # Define the convolutional layers
+        self.feature_extractor = nn.Sequential(
+            nn.Conv2d(
+                in_channels=image_channels,
+                out_channels=self.num_filters_cl1,
+                kernel_size=5,
+                stride=1,
+                padding=2
+                ), 
+            nn.ReLU(), 
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(in_channels= self.num_filters_cl1,
+                    out_channels=self.num_filters_cl2,
+                    kernel_size=5,
+                    stride=1,
+                    padding=2
+                ),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2), 
+            nn.Conv2d(in_channels=self.num_filters_cl2, 
+                    out_channels=self.num_filters_cl3, 
+                    kernel_size=5, 
+                    stride=1, 
+                    padding=2
+                ),
+            nn.ReLU(), 
+            nn.Conv2d(in_channels=self.num_filters_cl3, 
+                    out_channels=self.num_filters_cl4, 
+                    kernel_size=5, 
+                    stride=1, 
+                    padding=2
+                ),
+            nn.ReLU(), 
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+       
+        # The output of feature_extractor will be [batch_size, num_filters, 4, 4]
+        self.num_output_features = 4*4*self.num_filters_cl4
+        # Initialize our last fully connected layer
+        # Initialize our last fully connected layer
+        # Inputs all extracted features from the convolutional layers
+        # Outputs num_classes predictions, 1 for each class.
+        # There is no need for softmax activation function, as this is
+        # included with nn.CrossEntropyLoss
+        #self.classifier = nn.Sequential(
+        #    nn.Linear(self.num_output_features, num_classes),
+        #)
+        # Define the fully connected layers (FCL)
+        self.classifier = nn.Sequential(
+            nn.Linear(self.num_output_features, self.num_filters_fcl1),
+            nn.ReLU(),
+            nn.Linear(self.num_filters_fcl1, self.num_classes)
+        )
+
+    def forward(self, x):
+        """
+        Performs a forward pass through the model
+        Args:
+            x: Input image, shape: [batch_size, 3, 32, 32]
+        """
+        batch_size = x.shape[0]
+        x = self.feature_extractor(x)
+        x = x.view(-1, self.num_output_features)
+        x = self.classifier(x)
+        out = x
+        expected_shape = (batch_size, self.num_classes)
+        assert out.shape == (batch_size, self.num_classes),\
+            f"Expected output of forward pass to be: {expected_shape}, but got: {out.shape}"
+        return out
+
 
 class Trainer:
 
@@ -421,13 +598,11 @@ class Trainer:
         print(self.model)
 
         # Define our optimizer. SGD = Stochastich Gradient Descent
-        #self.optimizer = torch.optim.SGD(self.model.parameters(),
-        #                                 self.learning_rate, weight_decay=0.003)
-        # Attempt a different optimizer
-        self.optimizer = torch.optim.Adadelta(self.model.parameters(), lr=0.5, rho=0.6, eps=1e-06, weight_decay=0)
-        #self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.01, amsgrad=False)
+        self.optimizer = torch.optim.SGD(self.model.parameters(), self.learning_rate)
+        # Attempt a different optimizer, Adadelta should be used when using Model7524 
+        #self.optimizer = torch.optim.Adadelta(self.model.parameters(), lr=0.5, rho=0.6, eps=1e-06, weight_decay=0)
+        #self.optimizer = torch.optim.ASGD(self.model.parameters(), lr=0.01, lambd=0.0001, alpha=0.75, t0=1000000.0, weight_decay=0)
         
-
         # Load our dataset
         self.dataloader_train, self.dataloader_val, self.dataloader_test = dataloaders
         
@@ -488,7 +663,7 @@ class Trainer:
             return True
         return False
 
-    def train(self):
+    def train(self, diff_optimizer=False):
         """
         Trains the model for [self.epochs] epochs.
         """
@@ -565,25 +740,30 @@ class Trainer:
         print("The final test accuracy : {}".format(test_accuracy))
 
 
-def create_plots(trainer: Trainer, name: str):
+def create_plots(trainer1: Trainer, name: str):
     plot_path = pathlib.Path("plots")
     plot_path.mkdir(exist_ok=True)
     # Save plots and show them
     plt.figure(figsize=(20, 8))
     plt.subplot(2, 1, 1)
     plt.title("Cross Entropy Loss")
-    utils.plot_loss(trainer.TRAIN_LOSS, label="Training loss")
-    utils.plot_loss(trainer.VALIDATION_LOSS, label="Validation loss")
-    utils.plot_loss(trainer.TEST_LOSS, label="Testing Loss")
+    utils.plot_loss(trainer1.TRAIN_LOSS, label="Training loss")
+    utils.plot_loss(trainer1.VALIDATION_LOSS, label="Validation loss")
+    utils.plot_loss(trainer1.TEST_LOSS, label="Testing Loss")
+    #utils.plot_loss(trainer2.TRAIN_LOSS, label="Training loss Best")
+    #utils.plot_loss(trainer2.VALIDATION_LOSS, label="Validation loss Best")
+    #utils.plot_loss(trainer2.TEST_LOSS, label="Testing Loss Best")
     plt.legend()
     plt.subplot(2, 1, 2)
     plt.title("Accuracy")
-    utils.plot_loss(trainer.VALIDATION_ACC, label="Validation Accuracy")
-    utils.plot_loss(trainer.TEST_ACC, label="Testing Accuracy")
+    utils.plot_loss(trainer1.VALIDATION_ACC, label="Validation Accuracy")
+    utils.plot_loss(trainer1.TEST_ACC, label="Testing Accuracy")
+    #utils.plot_loss(trainer2.VALIDATION_ACC, label="Validation Accuracy Best")
+    #utils.plot_loss(trainer2.TEST_ACC, label="Testing Accuracy Best")
     plt.legend()
     plt.savefig(plot_path.joinpath(f"{name}_plot.png"))
     plt.show()
-    return 0
+    return  
 
 
 
@@ -597,7 +777,7 @@ if __name__ == "__main__":
     early_stop_count = 4
     dataloaders = load_cifar10(batch_size)
     model = Task3Model(image_channels=3, num_classes=10)
-    trainer = Trainer(
+    trainer1 = Trainer(
         batch_size,
         learning_rate,
         early_stop_count,
@@ -605,6 +785,16 @@ if __name__ == "__main__":
         model,
         dataloaders
     )
-    trainer.train()
-    create_plots(trainer, "task2")
+    trainer1.train()
+    #trainer2 = Trainer(
+    #    batch_size,
+    #    learning_rate,
+    #    early_stop_count,
+    #    epochs,
+    #    best_model,
+    #    dataloaders
+    #)
+    #trainer2.train()
+
+    create_plots(trainer1, "task3a")
 
