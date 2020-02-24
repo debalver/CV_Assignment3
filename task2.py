@@ -328,8 +328,7 @@ class Task3Model(nn.Module):
         super().__init__()
         self.num_filters_cl1 = 32  # Set number of filters in first conv layer
         self.num_filters_cl2 = 64 # "" second conv layer 
-        self.num_filters_cl3 = 128 # "" third conv layer
-        self.num_filters_cl4 = 256  
+        self.num_filters_cl3 = 128 # "" third conv layer 
         self.num_filters_fcl1 = 64 # number of filter in the first fully connected layer 
         self.num_classes = num_classes # second and last fully connected layer
         # Define the convolutional layers
@@ -342,6 +341,7 @@ class Task3Model(nn.Module):
                 padding=2
                 ), 
             nn.ReLU(), 
+            nn.MaxPool2d(kernel_size=2, stride=2),
             nn.Conv2d(in_channels= self.num_filters_cl1,
                     out_channels=self.num_filters_cl2,
                     kernel_size=5,
@@ -357,39 +357,20 @@ class Task3Model(nn.Module):
                     padding=2
                 ),
             nn.ReLU(), 
-            nn.Conv2d(in_channels=self.num_filters_cl3, 
-                    out_channels=self.num_filters_cl4, 
-                    kernel_size=5, 
-                    stride=1, 
-                    padding=2
-                ),
-            nn.ReLU(), 
-            nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.Conv2d(in_channels=self.num_filters_cl4, 
-                    out_channels=self.num_filters_cl4, 
-                    kernel_size=5, 
-                    stride=1, 
-                    padding=2
-                ),
-            nn.ReLU(), 
-            nn.Conv2d(in_channels=self.num_filters_cl4, 
-                    out_channels=self.num_filters_cl4, 
-                    kernel_size=5, 
-                    stride=1, 
-                    padding=2
-                ),
-            nn.ReLU(), 
             nn.MaxPool2d(kernel_size=2, stride=2)
         )
        
         # The output of feature_extractor will be [batch_size, num_filters, 4, 4]
-        # Find out size output after cvn (square): size_new = (size_old - F_old+2P_old)/S_old + 1
-        self.num_output_features = 16*self.num_filters_cl4
+        self.num_output_features = 4*4*self.num_filters_cl3
+        # Initialize our last fully connected layer
         # Initialize our last fully connected layer
         # Inputs all extracted features from the convolutional layers
         # Outputs num_classes predictions, 1 for each class.
         # There is no need for softmax activation function, as this is
         # included with nn.CrossEntropyLoss
+        #self.classifier = nn.Sequential(
+        #    nn.Linear(self.num_output_features, num_classes),
+        #)
         # Define the fully connected layers (FCL)
         self.classifier = nn.Sequential(
             nn.Linear(self.num_output_features, self.num_filters_fcl1),
@@ -440,8 +421,12 @@ class Trainer:
         print(self.model)
 
         # Define our optimizer. SGD = Stochastich Gradient Descent
-        self.optimizer = torch.optim.SGD(self.model.parameters(),
-                                         self.learning_rate)
+        #self.optimizer = torch.optim.SGD(self.model.parameters(),
+        #                                 self.learning_rate, weight_decay=0.003)
+        # Attempt a different optimizer
+        self.optimizer = torch.optim.Adadelta(self.model.parameters(), lr=0.5, rho=0.6, eps=1e-06, weight_decay=0)
+        #self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.01, amsgrad=False)
+        
 
         # Load our dataset
         self.dataloader_train, self.dataloader_val, self.dataloader_test = dataloaders
