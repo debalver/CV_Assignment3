@@ -326,10 +326,10 @@ class Task3Model(nn.Module):
                 num_classes: Number of classes we want to predict (10)
         """
         super().__init__()
-        self.num_filters_cl1 = 32  # Set number of filters in first conv layer
-        self.num_filters_cl2 = 64 # "" second conv layer 
-        self.num_filters_cl3 = 128 # "" third conv layer 
-        self.num_filters_fcl1 = 64 # number of filter in the first fully connected layer 
+        self.num_filters_cl1 = 64  # Set number of filters in first conv layer
+        self.num_filters_cl2 = 128 # "" second conv layer 
+        self.num_filters_cl3 = 256 # "" third conv layer
+        self.num_filters_fcl1 = 95 # number of filter in the first fully connected layer 
         self.num_classes = num_classes # second and last fully connected layer
         # Define the convolutional layers
         self.feature_extractor = nn.Sequential(
@@ -584,7 +584,7 @@ def create_plots(trainer: Trainer, name: str):
     plt.savefig(plot_path.joinpath(f"{name}_plot.png"))
     plt.show()
     return 0
-    
+
 
 
 
@@ -607,4 +607,4 @@ if __name__ == "__main__":
     )
     trainer.train()
     create_plots(trainer, "task2")
-    
+
