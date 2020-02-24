@@ -395,6 +395,7 @@ class Model7524(nn.Module):
             f"Expected output of forward pass to be: {expected_shape}, but got: {out.shape}"
         return out
 
+# +
 class Model7704(nn.Module):
 
     def __init__(self,
@@ -483,7 +484,7 @@ class Model7704(nn.Module):
             f"Expected output of forward pass to be: {expected_shape}, but got: {out.shape}"
         return out
     
-    class Task3Model(nn.Module):
+class Task3Model(nn.Module):
 
     def __init__(self,
                  image_channels,
@@ -536,7 +537,7 @@ class Model7704(nn.Module):
             nn.ReLU(), 
             nn.MaxPool2d(kernel_size=2, stride=2)
         )
-       
+
         # The output of feature_extractor will be [batch_size, num_filters, 4, 4]
         self.num_output_features = 4*4*self.num_filters_cl4
         # Initialize our last fully connected layer
@@ -571,6 +572,8 @@ class Model7704(nn.Module):
             f"Expected output of forward pass to be: {expected_shape}, but got: {out.shape}"
         return out
 
+
+# -
 
 class Trainer:
 
@@ -776,7 +779,7 @@ if __name__ == "__main__":
     learning_rate = 5e-2
     early_stop_count = 4
     dataloaders = load_cifar10(batch_size)
-    model = Task3Model(image_channels=3, num_classes=10)
+    model = Model7704(image_channels=3, num_classes=10)
     trainer1 = Trainer(
         batch_size,
         learning_rate,
