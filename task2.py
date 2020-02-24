@@ -583,7 +583,8 @@ class Trainer:
                  early_stop_count: int,
                  epochs: int,
                  model: torch.nn.Module,
-                 dataloaders: typing.List[torch.utils.data.DataLoader]):
+                 dataloaders: typing.List[torch.utils.data.DataLoader],
+                 task3d=False):
         """
             Initialize our trainer class.
         """
@@ -599,12 +600,14 @@ class Trainer:
         # Transfer model to GPU VRAM, if possible.
         self.model = utils.to_cuda(self.model)
         print(self.model)
+        # Variable for task3d and try to reach 80%
+        self.task3d = task3d 
 
         # Define our optimizer. SGD = Stochastich Gradient Descent
-        #self.optimizer = torch.optim.SGD(self.model.parameters(), self.learning_rate)
-        # Attempt a different optimizer, Adadelta should be used when using Model7524 
-        self.optimizer = torch.optim.Adadelta(self.model.parameters(), lr=0.5, rho=0.6, eps=1e-06, weight_decay=0)
-        #self.optimizer = torch.optim.ASGD(self.model.parameters(), lr=0.01, lambd=0.0001, alpha=0.75, t0=1000000.0, weight_decay=0)
+        if self.task3d:
+            self.optimizer = torch.optim.Adadelta(self.model.parameters(), lr=0.5, rho=0.6, eps=1e-06, weight_decay=0)
+        else:
+            self.optimizer = torch.optim.SGD(self.model.parameters(), self.learning_rate)
         
         # Load our dataset
         self.dataloader_train, self.dataloader_val, self.dataloader_test = dataloaders
@@ -676,7 +679,7 @@ class Trainer:
 
         for epoch in range(self.epochs):
             self.epoch = epoch
-            if epoch == 6:
+            if epoch == 6 and self.task3d:
                 self.optimizer = torch.optim.SGD(self.model.parameters(), self.learning_rate)
             # Perform a full pass through all the training samples
             for X_batch, Y_batch in self.dataloader_train:
@@ -755,24 +758,20 @@ def create_plots(trainer1: Trainer, name: str):
     utils.plot_loss(trainer1.TRAIN_LOSS, label="Training loss")
     utils.plot_loss(trainer1.VALIDATION_LOSS, label="Validation loss")
     utils.plot_loss(trainer1.TEST_LOSS, label="Testing Loss")
-    #utils.plot_loss(trainer2.TRAIN_LOSS, label="Training loss Best")
-    #utils.plot_loss(trainer2.VALIDATION_LOSS, label="Validation loss Best")
-    #utils.plot_loss(trainer2.TEST_LOSS, label="Testing Loss Best")
+    #utils.plot_loss(trainer2.TRAIN_LOSS, label="Training loss Adadelta+SGD")
+    #utils.plot_loss(trainer2.VALIDATION_LOSS, label="Validation loss Adadelta+SGD")
+    #utils.plot_loss(trainer2.TEST_LOSS, label="Testing Loss Adadelta+SGD")
     plt.legend()
     plt.subplot(2, 1, 2)
     plt.title("Accuracy")
     utils.plot_loss(trainer1.VALIDATION_ACC, label="Validation Accuracy")
     utils.plot_loss(trainer1.TEST_ACC, label="Testing Accuracy")
-    #utils.plot_loss(trainer2.VALIDATION_ACC, label="Validation Accuracy Best")
-    #utils.plot_loss(trainer2.TEST_ACC, label="Testing Accuracy Best")
+    #utils.plot_loss(trainer2.VALIDATION_ACC, label="Validation Accuracy Adadelta+SGD")
+    #utils.plot_loss(trainer2.TEST_ACC, label="Testing Accuracy Adadelta+SGD")
     plt.legend()
     plt.savefig(plot_path.joinpath(f"{name}_plot.png"))
     plt.show()
     return  
-
-
-
-
 
 
 if __name__ == "__main__":
@@ -782,6 +781,7 @@ if __name__ == "__main__":
     early_stop_count = 4
     dataloaders = load_cifar10(batch_size)
     model = Model7764(image_channels=3, num_classes=10)
+    #model2 = Model7764(image_channels=3, num_classes=10)
     trainer1 = Trainer(
         batch_size,
         learning_rate,
@@ -796,8 +796,9 @@ if __name__ == "__main__":
     #    learning_rate,
     #    early_stop_count,
     #    epochs,
-    #    best_model,
-    #    dataloaders
+    #    model2,
+    #    dataloaders,
+    #    True
     #)
     #trainer2.train()
 
