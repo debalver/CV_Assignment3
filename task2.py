@@ -569,7 +569,8 @@ class Trainer:
                  epochs: int,
                  model: torch.nn.Module,
                  dataloaders: typing.List[torch.utils.data.DataLoader],
-                 task3d=False):
+                 task3d=False,
+                 task4a=False):
         """
             Initialize our trainer class.
         """
@@ -587,6 +588,8 @@ class Trainer:
         print(self.model)
         # Variable for task3d and try to reach 80%
         self.task3d = task3d 
+        # Variable for task 4a
+        self.task4a = task4a 
 
         # Define our optimizer. SGD = Stochastich Gradient Descent
         # Usually the SGD is used, but in the case of the task3d, both the SGD and Adadelta algorithm are used.
@@ -595,7 +598,10 @@ class Trainer:
             self.optimizer = torch.optim.Adadelta(self.model.parameters(), lr=0.5, rho=0.6, eps=1e-06, weight_decay=0)
         else:
             self.optimizer = torch.optim.SGD(self.model.parameters(), self.learning_rate)
-        
+        # If we are running the task4a, use the Adam optimizer 
+        if self.task4a:
+            self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, amsgrad=False)
+
         # Load our dataset
         self.dataloader_train, self.dataloader_val, self.dataloader_test = dataloaders
         
@@ -785,7 +791,7 @@ if __name__ == "__main__":
     #    epochs,
     #    model2,
     #    dataloaders,
-    #    True
+    #    task3d=True
     #)
     #trainer2.train()
 

@@ -5,22 +5,38 @@ import typing
 import numpy as np
 np.random.seed(0)
 
-mean = (0.5, 0.5, 0.5)
-std = (.25, .25, .25)
 
-
-def load_cifar10(batch_size: int, validation_fraction: float = 0.1
+def load_cifar10(batch_size: int, validation_fraction: float = 0.1, task4a: bool = False
                  ) -> typing.List[torch.utils.data.DataLoader]:
+    
+    if task4a:
+        mean=[0.485, 0.456, 0.406]
+        std=[0.229, 0.224, 0.225]
+    else:
+        mean = (0.5, 0.5, 0.5)
+        std = (.25, .25, .25)
     # Note that transform train will apply the same transform for
     # validation!
-    transform_train = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(mean, std),
-    ])
-    transform_test = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(mean, std)
-    ])
+    if task4a:
+        transform_train = transforms.Compose([
+            transforms.Resize(224),
+            transforms.ToTensor(),
+            transforms.Normalize(mean, std)
+        ])
+        transform_test = transforms.Compose([
+            transforms.Resize(224),
+            transforms.ToTensor(),
+            transforms.Normalize(mean, std)
+        ])
+    else: 
+        transform_train = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean, std)
+        ])
+        transform_test = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean, std)
+        ])
     data_train = datasets.CIFAR10('data/cifar10',
                                   train=True,
                                   download=True,
