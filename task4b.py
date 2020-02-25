@@ -65,6 +65,7 @@ def plot_kernels(tensor, num_cols=6):
 
 weights_tensor = first_conv_layer.weight.data
 print("Weights_tensor shape:", weights_tensor.shape)
+print("Weights_tensor filter 0 shape:", weights_tensor[0].shape)
 exit()
 weights_tensor = torch_image_to_numpy(weights_tensor)
 plot_kernels(weights_tensor, 6)
