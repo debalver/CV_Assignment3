@@ -66,10 +66,10 @@ def plot_kernels(tensor, num_cols=6):
 
 def plot_filters(weights_tensor: torch.Tensor, indices: list, name: str):
     plot_path = pathlib.Path("plots")
-    fig = plt.figure(figsize=(indices.length, 1))
+    fig = plt.figure(figsize=(len(indices), 1))
     for i, e in enumerate(indices):
         filter_e = torch_image_to_numpy(weights_tensor[e])
-        ax1 = fig.add_subplot(1, indices.length, i + 1)
+        ax1 = fig.add_subplot(1, len(indices), i + 1)
         ax1.imshow(filter_e)
         ax1.axis('off')
         ax1.set_xticklabels([])
