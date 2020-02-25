@@ -6,7 +6,7 @@ import torch
 import numpy as np
 image = Image.open("images/zebra.jpg")
 print("Image shape:", image.size)
-
+#holaaaaaaaa
 model = torchvision.models.resnet18(pretrained=True)
 print(model)
 first_conv_layer = model.conv1
