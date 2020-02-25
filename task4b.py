@@ -70,9 +70,11 @@ filter_14 = torch_image_to_numpy(weights_tensor[14])
 print("Weights_tensor filter 14 shape AFTER transformation to numpy:", filter_14.shape)
 print("filter_14:")
 print(filter_14)
+plot_path = pathlib.Path("plots")
 plt.axis("off")
 plt.imshow(filter_14)
-plt.show()
+name = task4b_filter_14
+plt.savefig(plot_path.joinpath(f"{name}_plot.png"))
 
 #exit()
 #weights_tensor = torch_image_to_numpy(weights_tensor)
