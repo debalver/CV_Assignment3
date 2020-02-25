@@ -1,5 +1,6 @@
 
 import matplotlib.pyplot as plt
+import pathlib
 from PIL import Image
 import torchvision
 import torch
@@ -73,7 +74,7 @@ print(filter_14)
 plot_path = pathlib.Path("plots")
 plt.axis("off")
 plt.imshow(filter_14)
-name = task4b_filter_14
+name = "task4b_filter_14"
 plt.savefig(plot_path.joinpath(f"{name}_plot.png"))
 
 #exit()
