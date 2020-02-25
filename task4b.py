@@ -64,7 +64,25 @@ def plot_kernels(tensor, num_cols=6):
     plt.subplots_adjust(wspace=0.1, hspace=0.1)
     plt.show()
 
+def plot_filters(weights_tensor: torch.Tensor, indices: list, name: str):
+    plot_path = pathlib.Path("plots")
+    fig = plt.figure(figsize=(indices.length, 1))
+    for i, e in enumerate(indices):
+        filter_e = torch_image_to_numpy(weights_tensor[e])
+        ax1 = fig.add_subplot(1, indices.length, i + 1)
+        ax1.imshow(filter_e)
+        ax1.axis('off')
+        ax1.set_xticklabels([])
+        ax1.set_yticklabels([])
+
+    plt.subplots_adjust(wspace=0.1, hspace=0.1)
+    plt.savefig(plot_path.joinpath(f"{name}_plot.png"))
+
+
 weights_tensor = first_conv_layer.weight.data
+indices = [14, 26, 32, 49, 52]
+plot_filters(weights_tensor, indices, "filters_task4b")
+""""
 print("Weights_tensor shape:", weights_tensor.shape)
 print("Weights_tensor filter 14 shape BEFORE transformation to numpy:", weights_tensor[14].shape)
 filter_14 = torch_image_to_numpy(weights_tensor[14])
@@ -76,6 +94,7 @@ plt.axis("off")
 plt.imshow(filter_14)
 name = "task4b_filter_14"
 plt.savefig(plot_path.joinpath(f"{name}_plot.png"))
+"""
 
 #exit()
 #weights_tensor = torch_image_to_numpy(weights_tensor)
@@ -83,5 +102,5 @@ plt.savefig(plot_path.joinpath(f"{name}_plot.png"))
 
 
 
-indices = [14, 26, 32, 49, 52]
+
 
