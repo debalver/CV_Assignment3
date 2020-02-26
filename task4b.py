@@ -64,13 +64,18 @@ def plot_kernels(tensor, num_cols=6):
     plt.subplots_adjust(wspace=0.1, hspace=0.1)
     plt.show()
 
-def plot_filters(weights_tensor: torch.Tensor, indices: list, name: str):
+def plot_filters(weights_tensor: torch.Tensor, filter_activation: torch.Tensor, indices: list, name: str):
+    global num_cols = len(indices)
+    global num_rows = 2
     plot_path = pathlib.Path("plots")
-    fig = plt.figure(figsize=(len(indices), 1))
-    for i, e in enumerate(indices):
-        filter_e = torch_image_to_numpy(weights_tensor[e])
-        ax1 = fig.add_subplot(1, len(indices), i + 1)
-        ax1.imshow(filter_e)
+    fig = plt.figure(figsize=(num_cols, num_rows))
+    for i range(num_cols * num_rows):
+        if i <= num_cols:
+            filter = torch_image_to_numpy(weights_tensor[indices[i]])
+        else:
+            filter = torch_image_to_numpy(filter_activation[i])
+        ax1 = fig.add_subplot(num_rows, num_cols, (i + 1) % ((num_cols * num_rows) + 1))
+        ax1.imshow(filter)
         ax1.axis('off')
         ax1.set_xticklabels([])
         ax1.set_yticklabels([])
@@ -81,7 +86,7 @@ def plot_filters(weights_tensor: torch.Tensor, indices: list, name: str):
 
 weights_tensor = first_conv_layer.weight.data
 indices = [14, 26, 32, 49, 52]
-plot_filters(weights_tensor, indices, "filters_task4b")
+plot_filters(weights_tensor, activation, indices, "filters_activation_task4b")
 """"
 print("Weights_tensor shape:", weights_tensor.shape)
 print("Weights_tensor filter 14 shape BEFORE transformation to numpy:", weights_tensor[14].shape)
