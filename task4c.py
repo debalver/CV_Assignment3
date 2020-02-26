@@ -45,16 +45,13 @@ def torch_image_to_numpy(image: torch.Tensor):
     image = np.moveaxis(image, 0, 2)
     return image
 
-def plot_filters(weights_tensor: torch.Tensor, filter_activation: torch.Tensor, indices: list, name: str):
-    num_cols = len(indices)
+def plot_filters(filter_activation: torch.Tensor, name: str):
+    num_cols = 5
     num_rows = 2
     plot_path = pathlib.Path("plots")
     fig = plt.figure(figsize=(num_cols, num_rows))
     for i in range(num_cols * num_rows):
-        if i < num_cols:
-            filter = torch_image_to_numpy(weights_tensor[indices[i]])
-        else:
-            filter = torch_image_to_numpy(filter_activation[0][indices[i - 5]])
+        torch_image_to_numpy(filter_activation[0][i]])
         ax1 = fig.add_subplot(num_rows, num_cols, (i + 1) % ((num_cols * num_rows) + 1))
         ax1.imshow(filter)
         ax1.axis('off')
@@ -71,6 +68,5 @@ def plot_filters(weights_tensor: torch.Tensor, filter_activation: torch.Tensor, 
 print("------------------------------------------------------------------------------------------------")
 model_conv = torch.nn.Sequential(*list(model.children())[:-2])
 activation = model_conv(image)
-for i in range(10):
-    print(i)
-print("Shape of activation from last Conv. Layer: ", activation.shape)
+plot_filters(activation, "task4c")
+print("Shape of activation of the filters from last Conv. Layer: ", activation.shape)
