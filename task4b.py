@@ -73,7 +73,7 @@ def plot_filters(weights_tensor: torch.Tensor, filter_activation: torch.Tensor, 
         if i < num_cols:
             filter = torch_image_to_numpy(weights_tensor[indices[i]])
         else:
-            filter = torch_image_to_numpy(filter_activation[indices[i - 5]])
+            filter = torch_image_to_numpy(filter_activation[:][indices[i - 5]])
         ax1 = fig.add_subplot(num_rows, num_cols, (i + 1) % ((num_cols * num_rows) + 1))
         ax1.imshow(filter)
         ax1.axis('off')
