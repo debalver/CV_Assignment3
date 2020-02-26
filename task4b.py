@@ -67,4 +67,4 @@ def plot_filters(weights_tensor: torch.Tensor, filter_activation: torch.Tensor, 
 
 weights_tensor = first_conv_layer.weight.data
 indices = [14, 26, 32, 49, 52]
-plot_filters(weights_tensor, activation, indices, "filters_activation_task4b")
+plot_filters(weights_tensor, activation, indices, "task4b")
