@@ -65,11 +65,11 @@ def plot_kernels(tensor, num_cols=6):
     plt.show()
 
 def plot_filters(weights_tensor: torch.Tensor, filter_activation: torch.Tensor, indices: list, name: str):
-    global num_cols = len(indices)
-    global num_rows = 2
+    num_cols = len(indices)
+    num_rows = 2
     plot_path = pathlib.Path("plots")
     fig = plt.figure(figsize=(num_cols, num_rows))
-    for i range(num_cols * num_rows):
+    for i in range(num_cols * num_rows):
         if i <= num_cols:
             filter = torch_image_to_numpy(weights_tensor[indices[i]])
         else:
