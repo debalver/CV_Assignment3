@@ -7,7 +7,6 @@ import torch
 import numpy as np
 image = Image.open("images/zebra.jpg")
 print("Image shape before transformation:", image.size)
-#holaaaaAA
 model = torchvision.models.resnet18(pretrained=True)
 print(model)
 first_conv_layer = model.conv1
@@ -46,24 +45,6 @@ def torch_image_to_numpy(image: torch.Tensor):
     image = np.moveaxis(image, 0, 2)
     return image
 
-def plot_kernels(tensor, num_cols=6):
-    if not tensor.ndim==4:
-        raise Exception("assumes a 4D tensor")
-    #if not tensor.shape[-1]==3:
-        #raise Exception("last dim needs to be 3 to plot")
-    num_kernels = tensor.shape[0]
-    num_rows = 1+ num_kernels // num_cols
-    fig = plt.figure(figsize=(num_cols,num_rows))
-    for i in range(tensor.shape[0]):
-        ax1 = fig.add_subplot(num_rows,num_cols,i+1)
-        ax1.imshow(tensor[i])
-        ax1.axis('off')
-        ax1.set_xticklabels([])
-        ax1.set_yticklabels([])
-
-    plt.subplots_adjust(wspace=0.1, hspace=0.1)
-    plt.show()
-
 def plot_filters(weights_tensor: torch.Tensor, filter_activation: torch.Tensor, indices: list, name: str):
     num_cols = len(indices)
     num_rows = 2
@@ -87,25 +68,3 @@ def plot_filters(weights_tensor: torch.Tensor, filter_activation: torch.Tensor, 
 weights_tensor = first_conv_layer.weight.data
 indices = [14, 26, 32, 49, 52]
 plot_filters(weights_tensor, activation, indices, "filters_activation_task4b")
-""""
-print("Weights_tensor shape:", weights_tensor.shape)
-print("Weights_tensor filter 14 shape BEFORE transformation to numpy:", weights_tensor[14].shape)
-filter_14 = torch_image_to_numpy(weights_tensor[14])
-print("Weights_tensor filter 14 shape AFTER transformation to numpy:", filter_14.shape)
-print("filter_14:")
-print(filter_14)
-plot_path = pathlib.Path("plots")
-plt.axis("off")
-plt.imshow(filter_14)
-name = "task4b_filter_14"
-plt.savefig(plot_path.joinpath(f"{name}_plot.png"))
-"""
-
-#exit()
-#weights_tensor = torch_image_to_numpy(weights_tensor)
-#plot_kernels(weights_tensor, 6)
-
-
-
-
-
