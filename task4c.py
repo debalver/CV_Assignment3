@@ -51,7 +51,7 @@ def plot_filters(filter_activation: torch.Tensor, name: str):
     plot_path = pathlib.Path("plots")
     fig = plt.figure(figsize=(num_cols, num_rows))
     for i in range(num_cols * num_rows):
-        torch_image_to_numpy(filter_activation[0][i])
+        filter = torch_image_to_numpy(filter_activation[0][i])
         ax1 = fig.add_subplot(num_rows, num_cols, (i + 1) % ((num_cols * num_rows) + 1))
         ax1.imshow(filter)
         ax1.axis('off')
