@@ -71,4 +71,6 @@ def plot_filters(weights_tensor: torch.Tensor, filter_activation: torch.Tensor, 
 print("------------------------------------------------------------------------------------------------")
 model_conv = torch.nn.Sequential(*list(model.children())[:-2])
 activation = model_conv(image)
+for i in range(10):
+    print(i)
 print("Shape of activation from last Conv. Layer: ", activation.shape)
