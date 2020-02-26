@@ -69,6 +69,6 @@ def plot_filters(weights_tensor: torch.Tensor, filter_activation: torch.Tensor, 
 #indices = [14, 26, 32, 49, 52]
 #plot_filters(weights_tensor, activation, indices, "filters_activation_task4b")
 print("------------------------------------------------------------------------------------------------")
-model_conv = torch.Sequential(*list(model.children())[:-2])
+model_conv = torch.nn.Sequential(*list(model.children())[:-2])
 activation = model_conv(image)
 print("Shape of activation from last Conv. Layer: ", activation.shape)
